@@ -1,0 +1,1 @@
+- **Check for Updates in the Mac app menu.** Look for a new version right away, instead of waiting for the twice-a-day check.

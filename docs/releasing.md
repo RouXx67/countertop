@@ -4,7 +4,7 @@ Countertop uses version numbers like `v0.3.1`. A **fix** release bumps the last 
 
 ## While you work
 
-Every pull request that changes something people will notice adds a line under **## Unreleased** at the top of [CHANGELOG.md](../CHANGELOG.md), written for the people who use Countertop. Those lines become the release notes.
+Every pull request that changes something people will notice adds a one-line note file under [changes/](../changes/README.md): `changes/new/`, `changes/changed/` or `changes/fixed/`, written for the people who use Countertop. Separate files never conflict, so several pull requests can be open at once. Those notes become the release notes.
 
 ## Publish
 
@@ -14,12 +14,12 @@ Every pull request that changes something people will notice adds a line under *
 
 The workflow:
 
-- sets `VERSION` in `tools/countertop.py` and moves the Unreleased notes into a new section of the changelog, then commits that to `main`,
+- sets `VERSION` in `tools/countertop.py` gathers the notes in `changes/` into a new section of the changelog, removes the note files, then commits that to `main`,
 - publishes the GitHub release with those notes,
 - builds and tests the Docker image and pushes `ghcr.io/kizit/countertop:vX.Y.Z` and `:latest`,
 - builds and tests the Mac app for Apple Silicon and Intel, and attaches both zips to the release.
 
-It takes about 15 minutes. It stops before changing anything if there are no notes under Unreleased.
+It takes about 15 minutes. It stops before changing anything if there are no notes in `changes/`.
 
 Unraid's **Check for Updates** and `docker compose pull` pick up `:latest`. Within 12 hours, every install's Controls shows the update notice with a link to the release notes, and the Mac app shows **Install Countertop vX.Y.Z** in its menu.
 

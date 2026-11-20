@@ -1,12 +1,12 @@
 """Get the repository ready for a release: pick the next version number, set it in
-tools/countertop.py, and turn the changelog's "Unreleased" notes into that version's section.
+tools/countertop.py, and gather the notes in changes/ into that version's section of CHANGELOG.md.
 
     python3 .github/prepare-release.py fix        # 0.3.1 -> 0.3.2
     python3 .github/prepare-release.py feature    # 0.3.1 -> 0.4.0
     python3 .github/prepare-release.py 1.0.0      # an exact version
 
-Prints the new tag (e.g. v0.3.2). Stops with an error, and changes nothing, if there are no
-notes under "## Unreleased" or the version would not go up.
+Prints the new tag (e.g. v0.3.2) and removes the note files it used. Stops with an error, and
+changes nothing, if there are no notes or the version would not go up.
 """
 import datetime
 import re
@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SERVER = ROOT / "tools" / "countertop.py"
 CHANGELOG = ROOT / "CHANGELOG.md"
+CHANGES = ROOT / "changes"
+KINDS = [("new", "New"), ("changed", "Changed"), ("fixed", "Fixed")]
 
 how = sys.argv[1] if len(sys.argv) > 1 else ""
 code = SERVER.read_text()
@@ -36,11 +38,33 @@ if new <= (major, minor, patch):
 ver = "%d.%d.%d" % new
 
 text = CHANGELOG.read_text()
-sec = re.search(r"^## Unreleased[ \t]*\n(.*?)(?=^## |\Z)", text, re.M | re.S)
-if not sec or not sec.group(1).strip():
-    sys.exit('CHANGELOG.md has nothing under "## Unreleased". Add a line for each change people will notice, then try again.')
+# notes written straight into an "## Unreleased" section (the older way) still count
+old = re.search(r"^## Unreleased[ \t]*\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+old_notes = old.group(1).strip() if old else ""
+if old:
+    text = text[:old.start()] + text[old.end():]
+
+used, parts = [], []
+for folder, heading in KINDS:
+    lines = []
+    for f in sorted((CHANGES / folder).glob("*.md")):
+        body = f.read_text().strip()
+        if body:
+            lines.append(body if body.startswith("- ") else "- " + body)
+        used.append(f)
+    if lines:
+        parts.append("### %s\n%s" % (heading, "\n".join(lines)))
+notes = "\n\n".join(p for p in [old_notes] + parts if p)
+if not notes:
+    sys.exit("There are no notes for this release. Add a file under changes/new, changes/changed or changes/fixed "
+             "(see changes/README.md), then try again.")
+
 today = datetime.date.today().isoformat()
-text = text[:sec.start()] + "## Unreleased\n\n## v%s (%s)\n\n%s\n\n" % (ver, today, sec.group(1).strip()) + text[sec.end():]
+first = re.search(r"^## ", text, re.M)
+at = first.start() if first else len(text)
+text = text[:at] + "## v%s (%s)\n\n%s\n\n" % (ver, today, notes) + text[at:]
 CHANGELOG.write_text(text)
 SERVER.write_text(code[:cur.start()] + 'VERSION = "%s"' % ver + code[cur.end():])
+for f in used:
+    f.unlink()
 print("v" + ver)

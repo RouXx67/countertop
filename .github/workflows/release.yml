@@ -1,7 +1,7 @@
 name: Release
 
 # Publish a new version from the Actions tab: Release > Run workflow.
-# It sets the version, turns the changelog's "Unreleased" notes into the release notes,
+# It sets the version, turns the notes in changes/ into the changelog and release notes,
 # publishes the release, then builds and attaches the Docker image and both Mac apps.
 
 on:

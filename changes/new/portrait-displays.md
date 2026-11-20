@@ -1,0 +1,1 @@
+- **Portrait displays.** The dashboard arranges your boxes into rows on tall screens and wraps the Week ahead tile. Try the 1080×1920 preview in Controls, or set **Screen orientation** manually for a display that keeps reporting landscape.
